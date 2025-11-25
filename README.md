@@ -1,64 +1,80 @@
-## AlphaZero-Gomoku
-This is an implementation of the AlphaZero algorithm for playing the simple board game Gomoku (also called Gobang or Five in a Row) from pure self-play training. The game Gomoku is much simpler than Go or chess, so that we can focus on the training scheme of AlphaZero and obtain a pretty good AI model on a single PC in a few hours. 
+# AlphaZero-OmniFive
 
-References:  
-1. AlphaZero: Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm
-2. AlphaGo Zero: Mastering the game of Go without human knowledge
+AlphaZero-OmniFive 將 AlphaZero 演算法套用在五子棋（Gomoku）上，完全依靠自對弈資料訓練策略價值網路，再結合蒙地卡羅樹搜索（MCTS）做決策。因為五子棋的狀態空間遠小於圍棋或西洋棋，只要一台具備 CUDA GPU 的PC，在幾個小時內就能獲得具有競爭力的棋力。
 
-### Update 2018.2.24: supports training with TensorFlow!
-### Update 2018.1.17: supports training with PyTorch!
+#### AlphaGo 與 AlphaGo Zero 的差異
 
-### Example Games Between Trained Models
-- Each move with 400 MCTS playouts:  
-![playout400](https://raw.githubusercontent.com/junxiaosong/AlphaZero_Gomoku/master/playout400.gif)
+- **AlphaGo**：結合專家棋譜、人工設計特徵與候選步預測，搭配 MCTS，並使用自我對局進一步強化。
+- **AlphaGo Zero**：從零開始僅依賴規則自我對弈，使用殘差卷積網路同時輸出策略與價值，再搭配 MCTS；捨棄人工特徵與人類棋譜，架構更簡潔、訓練與推理更有效率，棋力也超越 AlphaGo。
 
-### Requirements
-To play with the trained AI models, only need:
-- Python >= 2.7
-- Numpy >= 1.11
+![playout400](playout400.gif)
 
-To train the AI model from scratch, further need, either:
-- Theano >= 0.7 and Lasagne >= 0.1      
-or
-- PyTorch >= 0.2.0    
-or
-- TensorFlow
+### 系統需求
 
-**PS**: if your Theano's version > 0.7, please follow this [issue](https://github.com/aigamedev/scikit-neuralnetwork/issues/235) to install Lasagne,  
-otherwise, force pip to downgrade Theano to 0.7 ``pip install --upgrade theano==0.7.0``
+- 如果要遊玩需要下列套件
+  - python >= 2.7
+  - numpy >= 2.11
+- 如果要訓練模型需要下列套件
+  - Pytorch >= 0.4
 
-If you would like to train the model using other DL frameworks, you only need to rewrite policy_value_net.py.
 
-### Getting Started
-To play with provided models, run the following script from the directory:  
+### 初始設定
+
+```bash
+git clone https://github.com/Suyw-0123/AlphaZero-OmniFive.git
+cd AlphaZero-OmniFive
 ```
-python human_play.py  
-```
-You may modify human_play.py to try different provided models or the pure MCTS.
 
-To train the AI model from scratch, with Theano and Lasagne, directly run:   
+## 與模型對局
+
+```bash
+python human_play.py
 ```
+
+
+## 訓練模型
+
+```bash
 python train.py
 ```
-With PyTorch or TensorFlow, first modify the file [train.py](https://github.com/junxiaosong/AlphaZero_Gomoku/blob/master/train.py), i.e., comment the line
-```
-from policy_value_net import PolicyValueNet  # Theano and Lasagne
-```
-and uncomment the line 
-```
-# from policy_value_net_pytorch import PolicyValueNet  # Pytorch
-or
-# from policy_value_net_tensorflow import PolicyValueNet # Tensorflow
-```
-and then execute: ``python train.py``  (To use GPU in PyTorch, set ``use_gpu=True`` and use ``return loss.item(), entropy.item()`` in function train_step in policy_value_net_pytorch.py if your pytorch version is greater than 0.5)
 
-The models (best_policy.model and current_policy.model) will be saved every a few updates (default 50).  
+訓練流程包含：
 
-**Note:** the 4 provided models were trained using Theano/Lasagne, to use them with PyTorch, please refer to [issue 5](https://github.com/junxiaosong/AlphaZero_Gomoku/issues/5).
+1. 自對弈收集棋譜並做旋轉、翻轉增強。
+2. 以小批次資料更新策略價值網路。
+3. 固定回合對純 MCTS 對手評估，若勝率提升則覆寫 `best_policy.model`。
 
-**Tips for training:**
-1. It is good to start with a 6 * 6 board and 4 in a row. For this case, we may obtain a reasonably good model within 500~1000 self-play games in about 2 hours.
-2. For the case of 8 * 8 board and 5 in a row, it may need 2000~3000 self-play games to get a good model, and it may take about 2 days on a single PC.
+輸出模型：
 
-### Further reading
-My article describing some details about the implementation in Chinese: [https://zhuanlan.zhihu.com/p/32089487](https://zhuanlan.zhihu.com/p/32089487) 
+- `current_policy.model`：最新訓練後的網路。
+- `best_policy.model`：迄今評估中戰績最佳的網路。
+
+### 訓練參數說明
+
+| 參數 | 預設值 | 說明 |
+| --- | --- | --- |
+| `board_width` / `board_height` | 8 | 棋盤長寬；8x8 為加強版五子棋常用設定。若調整需同時修改 `n_in_row`。 |
+| `n_in_row` | 5 | 連成五子的勝利條件。與棋盤尺寸共同決定遊戲難度。 |
+| `learn_rate` | 2e-3 | Adam 最初學習率。會依據 KL 發散程度由 `lr_multiplier` 動態縮放。 |
+| `lr_multiplier` | 1.0 | KL 超過或低於門檻時成倍調整，控制學習率衰減或回升。 |
+| `temp` | 1.0 | 自對弈時的溫度，決定落子探索度，後期可降溫以減少隨機性。 |
+| `n_playout` | 900 | 每步行棋的 MCTS 模擬次數。數值越高越強但推理時間越長。 |
+| `c_puct` | 5 | MCTS 探索係數，平衡高訪問率與高評分節點。 |
+| `buffer_size` | 20000 | 自對弈資料緩衝區容量，越大代表保留更多歷史對局供訓練。 |
+| `batch_size` | 768 | 每次梯度更新的樣本數。依 GPU 記憶體調整；8GB GPU 建議 640-768。 |
+| `play_batch_size` | 2 | 單次自對弈產生的棋局數量，兩局可同時填充緩衝區。 |
+| `epochs` | 8 | 每次更新時反覆疊代 mini-batch 的次數，提高收斂速度。 |
+| `kl_targ` | 0.02 | KL 散度目標，限制新舊策略差距，配合 `lr_multiplier` 控制步幅。 |
+| `check_freq` | 30 | 每蒐集多少批次自對弈資料就進行一次 MCTS 評估與模型儲存。 |
+| `game_batch_num` | 2500 | 訓練迴圈上限；若提前 Ctrl+C 會保留目前的最佳模型。 |
+| `pure_mcts_playout_num` | 2000 | 評估時純 MCTS 對手的模擬次數，數值越高評測越嚴格。 |
+
+> 若遇到 GPU 記憶體不足，可先將 `batch_size` 調低到 512 或 384，並同步降低 `n_playout` 以縮短自對弈時間。
+
+
+## 參考資料
+
+- 重要感謝 [AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku.git) 提供核心代碼
+
+- Silver et al., *Mastering the game of Go with deep neural networks and tree search* (Nature, 2016)
+- Silver et al., *Mastering the game of Go without human knowledge* (Nature, 2017)

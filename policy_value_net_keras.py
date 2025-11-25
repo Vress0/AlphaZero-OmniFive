@@ -11,14 +11,10 @@ from __future__ import print_function
 from keras.engine.topology import Input
 from keras.engine.training import Model
 from keras.layers.convolutional import Conv2D
-from keras.layers.core import Activation, Dense, Flatten
-from keras.layers.merge import Add
-from keras.layers.normalization import BatchNormalization
+from keras.layers.core import Dense, Flatten
 from keras.regularizers import l2
 from keras.optimizers import Adam
 import keras.backend as K
-
-from keras.utils import np_utils
 
 import numpy as np
 import pickle

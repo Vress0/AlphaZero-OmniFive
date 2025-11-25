@@ -24,7 +24,7 @@ class PolicyValueNet():
         if model_file:
             try:
                 net_params = pickle.load(open(model_file, 'rb'))
-            except:
+            except Exception:
                 # To support loading pretrained model in python3
                 net_params = pickle.load(open(model_file, 'rb'),
                                          encoding='bytes')

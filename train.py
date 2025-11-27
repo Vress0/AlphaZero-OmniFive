@@ -58,10 +58,14 @@ class TrainPipeline():
         if isinstance(init_model, str) and not init_model.strip():
             init_model = None
         model_path = init_model if init_model is not None else training_cfg.init_model
+
+        network_cfg = self._config.network
         self.policy_value_net = PolicyValueNet(self.board_width,
                                                self.board_height,
                                                model_file=model_path,
-                                               use_gpu=self._use_gpu)
+                                               use_gpu=self._use_gpu,
+                                               num_channels=network_cfg.num_channels,
+                                               num_res_blocks=network_cfg.num_res_blocks)
         self.mcts_player = MCTSPlayer(self.policy_value_net.policy_value_fn,
                                       c_puct=self.c_puct,
                                       n_playout=self.n_playout,

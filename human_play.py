@@ -66,9 +66,13 @@ def run(config_path="config.json"):
         # ############### human VS AI ###################
         if not model_file:
             raise ValueError("human_play.model_file must point to a PyTorch checkpoint saved by train.py")
+
+        network_cfg = app_config.network
         best_policy = PolicyValueNet(width, height,
                                      model_file=model_file,
-                                     use_gpu=use_gpu)
+                                     use_gpu=use_gpu,
+                                     num_channels=network_cfg.num_channels,
+                                     num_res_blocks=network_cfg.num_res_blocks)
         mcts_player = MCTSPlayer(best_policy.policy_value_fn,
                                  c_puct=human_cfg.c_puct,
                                  n_playout=human_cfg.n_playout)

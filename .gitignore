@@ -2,5 +2,3 @@
 __pycache__/
 .vscode
 .ruff_cache
-*.model
-*.model2

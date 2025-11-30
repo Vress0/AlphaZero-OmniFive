@@ -2,6 +2,13 @@
 
 AlphaZero-OmniFive applies the AlphaZero algorithm to Gomoku (Five in a Row), training a policy-value network purely through self-play data combined with Monte Carlo Tree Search (MCTS) for decision-making. Since Gomoku's state space is much smaller than Go or Chess, a competitive AI can be trained in just a few hours on a PC with a CUDA-enabled GPU.
 
+This repo is based on [AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku.git),And make the following modifications:
+- Changed the network architecture from CNN to ResNet
+- Optimized MCTS and self-play modules by leveraging PyTorch CUDA acceleration
+- Tuned training parameters specifically for large boards of size 9x9 and above
+- Added the models trained using this parameter
+- Added a new config.json file for centralized parameter management
+
 #### Differences Between AlphaGo and AlphaGo Zero
 
 - **AlphaGo**: Combines expert game records, hand-crafted features, and move prediction with MCTS, further enhanced through self-play.
@@ -14,17 +21,6 @@ AlphaZero-OmniFive applies the AlphaZero algorithm to Gomoku (Five in a Row), tr
 - Python >= 3.9
 - PyTorch >= 2.0 (CUDA-capable GPU driver environment required)
 - numpy >= 1.24
-
-#### Network Architecture
-
-The project uses a **ResNet (Residual Neural Network)** architecture optimized for Gomoku:
-
-- **Initial Conv Block**: Converts 4-channel board state to 128-channel features
-- **Residual Tower**: Configurable number of residual blocks (default: 6) for deep feature extraction
-- **Policy Head**: Outputs move probabilities via 1×1 convolution and fully-connected layers
-- **Value Head**: Estimates board game value (-1 to 1) via separate tower of layers
-
-ResNet's skip connections enable effective deep networks without training degradation, leading to better feature extraction and improved game understanding compared to plain CNNs.
 
 #### Initial Setup
 
@@ -69,8 +65,8 @@ Output models:
 
 | Parameter | Description |
 | --- | --- |
-| `num_channels` | Number of feature channels in residual blocks (default: 128). Higher values increase model capacity. |
-| `num_res_blocks` | Number of residual blocks in the tower (default: 6). More blocks enable deeper feature extraction. |
+| `num_channels` | Number of feature channels in residual blocks. Higher values increase model capacity. |
+| `num_res_blocks` | Number of residual blocks in the tower. More blocks enable deeper feature extraction. |
 
 ### Training Configuration
 
@@ -82,15 +78,14 @@ Output models:
 | `n_playout` | Number of MCTS simulations per move. Higher values increase strength but also inference time. |
 | `c_puct` | MCTS exploration coefficient, balancing high visit counts and high-scoring nodes. |
 | `buffer_size` | Self-play data buffer capacity; larger values retain more historical games for training. |
-| `batch_size` | Number of samples per gradient update. Adjust based on GPU memory; recommend 512-640 for 8GB GPUs. |
+| `batch_size` | Number of samples per gradient update. Adjust based on GPU memory. |
 | `play_batch_size` | Number of games generated per self-play round. |
 | `epochs` | Number of mini-batch iterations per update, improving convergence speed. |
 | `kl_targ` | Target KL divergence, limiting policy change between old and new, working with `lr_multiplier` to control step size. |
 | `check_freq` | Frequency (in batches) for MCTS evaluation and model saving. |
 | `game_batch_num` | Training loop upper limit; Ctrl+C saves the current best model. |
-| `pure_mcts_playout_num` | Number of simulations for the pure MCTS opponent during evaluation; higher values make evaluation stricter. |
 
-> **GPU Memory Optimization**: ResNet with 128 channels and 6 blocks typically requires ~2-3GB VRAM for batch_size=256. If GPU memory is insufficient, reduce `batch_size` to 512 or 384, and lower `num_channels` to 64 or `num_res_blocks` to 4 to reduce model size.
+> **GPU Memory Optimization**: Adjust `batch_size`, `num_channels`, and `num_res_blocks` according to your GPU memory. Lower values reduce model size and memory usage.
 
 ## References
 

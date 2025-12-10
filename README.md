@@ -101,6 +101,29 @@ Output models:
 
 > **GPU Memory Optimization**: Adjust `batch_size`, `num_channels`, and `num_res_blocks` according to your GPU memory. Lower values reduce model size and memory usage.
 
+### Battle Mode: `battle.py`
+
+To evaluate the strength of your trained model, you can pit it against a pure MCTS (Monte Carlo Tree Search) opponent using the `battle.py` script.
+
+#### How to Run
+
+```bash
+python battle.py
+```
+
+This script will:
+1.  Load the trained model specified in `config.json` under `human_play.model_file`.
+2.  Create a pure MCTS player to act as the opponent.
+3.  Start a game and print the board state to the console after each move.
+
+#### Configuration
+
+You can adjust the battle parameters directly within the `battle.py` file:
+
+- **Opponent Strength**: Modify the `pure_mcts_playout` variable to increase or decrease the thinking time and strength of the pure MCTS player.
+- **First Move**: Change the `start_player` argument in the `game.start_play()` function call. Set it to `0` for your trained model to go first, or `1` for the pure MCTS player to go first.
+
+
 ## References
 
 - Special thanks to [AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku.git) for providing the core codebase.

@@ -27,9 +27,9 @@
   },
   "human_play": {
     "model_file": "best_policy_11_11_5.model",
-    "start_player": 0,
-    "n_playout": 3000,
-    "c_puct": 4,
+    "start_player": 1,
+    "n_playout": 800,
+    "c_puct": 2.5,
     "use_gpu": true
   }
 }

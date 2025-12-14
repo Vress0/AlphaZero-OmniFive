@@ -35,6 +35,7 @@ cd AlphaZero-OmniFive
 ```bash
 python human_play.py
 ```
+> Before playing, you need to adjust the parameters in config.json to the appropriate chessboard size and Channel and Block used in ResNet training for the corresponding model.
 
 ## Train the Model
 
@@ -128,6 +129,6 @@ You can adjust the battle parameters directly within the `battle.py` file:
 ## References
 
 - Special thanks to [AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku.git) for providing the core codebase.
-
+- Play, Learn, Conquer: The Journey to a Self-Improving Game AI (https://benlu.substack.com/p/play-learn-conquer-the-journey-to)
 - Silver et al., *Mastering the game of Go with deep neural networks and tree search* (Nature, 2016)
 - Silver et al., *Mastering the game of Go without human knowledge* (Nature, 2017)

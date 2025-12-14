@@ -2,29 +2,26 @@
 
 AlphaZero-OmniFive applies the AlphaZero algorithm to Gomoku (Five in a Row), training a policy-value network purely through self-play data combined with Monte Carlo Tree Search (MCTS) for decision-making. Since Gomoku's state space is much smaller than Go or Chess, a competitive AI can be trained in just a few hours on a PC with a CUDA-enabled GPU.
 
+This repo is based on [AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku.git),And make the following modifications:
+- Changed the network architecture from CNN to ResNet
+- Optimized MCTS and self-play modules by leveraging PyTorch CUDA acceleration
+- Tuned training parameters specifically for large boards of size 9x9 and above
+- Added the models trained using this parameter
+- Added a new config.json file for centralized parameter management
+- Added GUI based on tkinter
+
 #### Differences Between AlphaGo and AlphaGo Zero
 
 - **AlphaGo**: Combines expert game records, hand-crafted features, and move prediction with MCTS, further enhanced through self-play.
 - **AlphaGo Zero**: Starts from scratch using only game rules for self-play, employs residual convolutional networks to output both policy and value simultaneously with MCTS; abandons hand-crafted features and human game records for a simpler architecture with more efficient training and inference, surpassing AlphaGo in strength.
 
-![playout400](playout400.gif)
+![playout400](gomoku_demo.gif)
 
-#### System Requirements
+#### System Requirements (The version I'm using)
 
-- Python >= 3.9
-- PyTorch >= 2.0 (CUDA-capable GPU driver environment required)
-- numpy >= 1.24
-
-#### Network Architecture
-
-The project uses a **ResNet (Residual Neural Network)** architecture optimized for Gomoku:
-
-- **Initial Conv Block**: Converts 4-channel board state to 128-channel features
-- **Residual Tower**: Configurable number of residual blocks (default: 6) for deep feature extraction
-- **Policy Head**: Outputs move probabilities via 1×1 convolution and fully-connected layers
-- **Value Head**: Estimates board game value (-1 to 1) via separate tower of layers
-
-ResNet's skip connections enable effective deep networks without training degradation, leading to better feature extraction and improved game understanding compared to plain CNNs.
+- Python >= 3.13
+- PyTorch >= 2.9 (CUDA 12.8 required)
+- numpy >= 2.2
 
 #### Initial Setup
 
@@ -69,8 +66,8 @@ Output models:
 
 | Parameter | Description |
 | --- | --- |
-| `num_channels` | Number of feature channels in residual blocks (default: 128). Higher values increase model capacity. |
-| `num_res_blocks` | Number of residual blocks in the tower (default: 6). More blocks enable deeper feature extraction. |
+| `num_channels` | Number of feature channels in residual blocks. Higher values increase model capacity. |
+| `num_res_blocks` | Number of residual blocks in the tower. More blocks enable deeper feature extraction. |
 
 ### Training Configuration
 
@@ -82,15 +79,51 @@ Output models:
 | `n_playout` | Number of MCTS simulations per move. Higher values increase strength but also inference time. |
 | `c_puct` | MCTS exploration coefficient, balancing high visit counts and high-scoring nodes. |
 | `buffer_size` | Self-play data buffer capacity; larger values retain more historical games for training. |
-| `batch_size` | Number of samples per gradient update. Adjust based on GPU memory; recommend 512-640 for 8GB GPUs. |
+| `batch_size` | Number of samples per gradient update. Adjust based on GPU memory. |
 | `play_batch_size` | Number of games generated per self-play round. |
 | `epochs` | Number of mini-batch iterations per update, improving convergence speed. |
 | `kl_targ` | Target KL divergence, limiting policy change between old and new, working with `lr_multiplier` to control step size. |
 | `check_freq` | Frequency (in batches) for MCTS evaluation and model saving. |
 | `game_batch_num` | Training loop upper limit; Ctrl+C saves the current best model. |
-| `pure_mcts_playout_num` | Number of simulations for the pure MCTS opponent during evaluation; higher values make evaluation stricter. |
+| `pure_mcts_playout_num` | Number of simulations for the pure MCTS opponent during evaluation. Higher values make evaluation stricter. |
+| `use_gpu` | Whether to use GPU acceleration for training and inference. |
+| `init_model` | Path to the initial model file to resume training from a checkpoint. |
 
-> **GPU Memory Optimization**: ResNet with 128 channels and 6 blocks typically requires ~2-3GB VRAM for batch_size=256. If GPU memory is insufficient, reduce `batch_size` to 512 or 384, and lower `num_channels` to 64 or `num_res_blocks` to 4 to reduce model size.
+
+### Human Play Configuration
+
+| Parameter | Description |
+| --- | --- |
+| `model_file` | Path to the model file used for human vs AI games. |
+| `start_player` | Set to 0 for human first, 1 for AI first. |
+| `n_playout` | Number of MCTS simulations per move for the AI during human play. |
+| `c_puct` | MCTS exploration coefficient for human play. |
+| `use_gpu` | Whether to use GPU acceleration for inference during human play. |
+
+> **GPU Memory Optimization**: Adjust `batch_size`, `num_channels`, and `num_res_blocks` according to your GPU memory. Lower values reduce model size and memory usage.
+
+### Battle Mode: `battle.py`
+
+To evaluate the strength of your trained model, you can pit it against a pure MCTS (Monte Carlo Tree Search) opponent using the `battle.py` script.
+
+#### How to Run
+
+```bash
+python battle.py
+```
+
+This script will:
+1.  Load the trained model specified in `config.json` under `human_play.model_file`.
+2.  Create a pure MCTS player to act as the opponent.
+3.  Start a game and print the board state to the console after each move.
+
+#### Configuration
+
+You can adjust the battle parameters directly within the `battle.py` file:
+
+- **Opponent Strength**: Modify the `pure_mcts_playout` variable to increase or decrease the thinking time and strength of the pure MCTS player.
+- **First Move**: Change the `start_player` argument in the `game.start_play()` function call. Set it to `0` for your trained model to go first, or `1` for the pure MCTS player to go first.
+
 
 ## References
 

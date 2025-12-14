@@ -3,6 +3,8 @@
 The configuration is stored in a simple JSON document.  This module exposes
 immutable dataclasses for each configuration section and validates the
 parameters at load time to keep the rest of the codebase lean and clean.
+
+@author: Suyw
 """
 
 from __future__ import annotations
@@ -192,7 +194,7 @@ def load_config(path: str | Path = _DEFAULT_CONFIG_PATH) -> AppConfig:
     board = BoardConfig.from_dict(raw.get("board"))
     network = NetworkConfig.from_dict(raw.get("network"))
     training = TrainingConfig.from_dict(raw.get("training"))
-    human = HumanPlayConfig.from_dict(raw.get("human"))
+    human = HumanPlayConfig.from_dict(raw.get("human_play"))
     return AppConfig(board=board, network=network, training=training, human=human)
 
 
